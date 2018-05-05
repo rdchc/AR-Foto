@@ -12,7 +12,7 @@ import ARKit
 
 class ViewController: UIViewController, ARSCNViewDelegate {
 
-    @IBOutlet var sceneView: ARSCNView!
+    @IBOutlet weak var sceneView: ARSCNView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,6 +28,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Set the scene to the view
         sceneView.scene = scene
+    }
+    
+    @IBAction func takePhoto(_ sender: Any) {
+        // Create a snapshot
+        let snapshot = sceneView.snapshot()
+        
+        // Save to photo album
+        UIImageWriteToSavedPhotosAlbum(snapshot, self, nil, nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
