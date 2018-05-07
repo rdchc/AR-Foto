@@ -24,10 +24,22 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.showsStatistics = true
         
         // Create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
+//        let scene = SCNScene(named: "art.scnassets/ship.scn")!
+        let scene = SCNScene()
+        addCube(in: scene)
         
         // Set the scene to the view
         sceneView.scene = scene
+        sceneView.automaticallyUpdatesLighting = true
+        
+        // Long press gesture recognizer
+//        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.didTap(withGestureRecognizer:)))
+        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(ViewController.didLongPress(with:)))
+        sceneView.addGestureRecognizer(longPressRecognizer)
+    }
+    
+    @IBAction func add(_ sender: Any) {
+        addCube(in: sceneView.scene)
     }
     
     @IBAction func takePhoto(_ sender: Any) {
@@ -58,6 +70,30 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Release any cached data, images, etc that aren't in use.
+    }
+    
+    // Add a cube in the provided scene
+    func addCube(in scene: SCNScene) {
+        let box = SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0)
+        let material = SCNMaterial()
+        material.name = "color"
+        material.diffuse.contents = UIColor.green
+        box.materials = [material]
+        
+        let boxNode = SCNNode(geometry: box)
+        boxNode.name = "myBox"
+        boxNode.position = SCNVector3Make(0, 0, -0.5)
+        scene.rootNode.addChildNode(boxNode)
+    }
+    
+    // MARK: Gesture recognizers
+    @objc func didLongPress(with recognizer: UIGestureRecognizer) {
+        let tapLocation = recognizer.location(in: sceneView)
+        let hitTestResults = sceneView.hitTest(tapLocation)
+        guard let node = hitTestResults.first?.node else { return }
+//        print(node.name ?? "No name")
+        
+        node.removeFromParentNode()
     }
 
     // MARK: - ARSCNViewDelegate
