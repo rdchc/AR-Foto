@@ -12,6 +12,7 @@ import ARKit
 
 class ViewController: UIViewController {
 
+    var isAdding: Bool = false
     @IBOutlet weak var sceneView: ARSCNView!
     
     override func viewDidLoad() {
@@ -33,6 +34,7 @@ class ViewController: UIViewController {
     }
     
     @IBAction func add(_ sender: Any) {
+        isAdding = true
         // Construct cube
 //        let cube = buildCube(in: sceneView.scene)
         // Add gesture recognizer
@@ -100,6 +102,12 @@ class ViewController: UIViewController {
     
     // MARK: Gesture recognizers
     @objc func addObjectToSceneView(with recognizer: UIGestureRecognizer) {
+        // 0. Return if not allowed
+        if !isAdding {
+            print("Not allowed to add")
+            return
+        }
+        
         // 1. Retrieve hit test results
         let tapLocation = recognizer.location(in: sceneView)
         let hitTestResults = sceneView.hitTest(tapLocation, types: .existingPlaneUsingExtent)
@@ -118,6 +126,15 @@ class ViewController: UIViewController {
         
         // 4. Remove gesture recognizer
         sceneView.removeGestureRecognizer(recognizer)
+        
+        // 5. Remove plane
+        if let planeNode = sceneView.scene.rootNode.childNode(withName: "plane", recursively: true) {
+            print("Removing plane node")
+            planeNode.removeFromParentNode()
+        }
+        
+        // 6. Disable adding
+        isAdding = false
     }
     
     @objc func didLongPress(with recognizer: UIGestureRecognizer) {
@@ -147,6 +164,7 @@ class ViewController: UIViewController {
             
             // 4. Bind plane to node
             let planeNode = SCNNode(geometry: plane)
+            planeNode.name = "plane"
             let x = CGFloat(planeAnchor.center.x)
             let y = CGFloat(planeAnchor.center.y)
             let z = CGFloat(planeAnchor.center.z)
@@ -176,6 +194,7 @@ class ViewController: UIViewController {
             let y = CGFloat(planeAnchor.center.y)
             let z = CGFloat(planeAnchor.center.z)
             planeNode.position = SCNVector3(x, y, z)
+            print("Updating node")
         }
     }
 
