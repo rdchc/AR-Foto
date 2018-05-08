@@ -36,6 +36,12 @@ class ViewController: UIViewController {
     
     @IBAction func add(_ sender: Any) {
         isAdding = true
+        // Show planes
+        sceneView.scene.rootNode.enumerateChildNodes {(node,_) in
+            if node.name == "plane" {
+                node.isHidden = false
+            }
+        }
         // Construct cube
 //        let cube = buildCube(in: sceneView.scene)
         // Add gesture recognizer
@@ -135,13 +141,11 @@ class ViewController: UIViewController {
             objNode.position = SCNVector3(x,y,z)
             sceneView.scene.rootNode.addChildNode(objNode)
             
-            // 4. Remove gesture recognizer
-            sceneView.removeGestureRecognizer(recognizer)
-            
-            // 5. Remove plane
-            if let planeNode = sceneView.scene.rootNode.childNode(withName: "plane", recursively: true) {
-                print("Removing plane node")
-                planeNode.removeFromParentNode()
+            // 4. Hide planes
+            sceneView.scene.rootNode.enumerateChildNodes {(node,_) in
+                if node.name == "plane" {
+                    node.isHidden = true
+                }
             }
         }
     }
@@ -151,6 +155,8 @@ class ViewController: UIViewController {
     // MARK: - ARSCNViewDelegate
     extension ViewController: ARSCNViewDelegate {
         func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+            print("Adding plane")
+            
             // 1. Get plane anchor
             guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
             
@@ -170,6 +176,7 @@ class ViewController: UIViewController {
             let z = CGFloat(planeAnchor.center.z)
             planeNode.position = SCNVector3(x, y, z)
             planeNode.eulerAngles.x = -.pi / 2
+            planeNode.isHidden = true
             
             // 5. Add plane node
             print("Adding plane")
