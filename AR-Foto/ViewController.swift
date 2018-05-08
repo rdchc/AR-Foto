@@ -137,13 +137,28 @@ class ViewController: UIViewController {
     @objc func doubleTapHandler(with recognizer: UIGestureRecognizer) {
         print("Double tapped")
         
+        // Make sure the node is eligible (has a name)
         let tapLocation = recognizer.location(in: sceneView)
         let hitTestResults = sceneView.hitTest(tapLocation)
-        if let node = hitTestResults.first?.node {
-            let name = node.name ?? "no name"
+        guard let node = hitTestResults.first?.node else {
+            print("Cannot find a node")
+            return
+        }
+        guard let name = node.name else { return }
+        if !["myBox"].contains(name) { return }
+        
+        // Show action sheet
+        let dialog = UIAlertController(title: name, message: nil, preferredStyle: .actionSheet)
+        let deleteAction = UIAlertAction(title: "Delete", style: .destructive) { (_) in
             print("Deleting node "+name)
             node.removeFromParentNode()
         }
+        let optionAction = UIAlertAction(title: "Options", style: .default, handler: nil)
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        dialog.addAction(deleteAction)
+        dialog.addAction(optionAction)
+        dialog.addAction(cancelAction)
+        self.present(dialog, animated: true, completion: nil)
     }
 
     @objc func singleTapHandler(with recognizer: UIGestureRecognizer) {
