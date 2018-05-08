@@ -61,9 +61,8 @@ class ViewController: UIViewController {
         dialog.addAction(UIAlertAction(title: "OK", style: .destructive, handler: { (_) in
             // Remove all nodes
             self.sceneView.scene.rootNode.enumerateChildNodes {(node,_) in
-                if let name = node.name {
-                    print("Deleting node " + name)
-                }
+                let name = node.name ?? "no name"
+                print("Deleting node " + name)
                 node.removeFromParentNode()
             }
             // Start the session again
@@ -141,6 +140,8 @@ class ViewController: UIViewController {
         let tapLocation = recognizer.location(in: sceneView)
         let hitTestResults = sceneView.hitTest(tapLocation)
         if let node = hitTestResults.first?.node {
+            let name = node.name ?? "no name"
+            print("Deleting node "+name)
             node.removeFromParentNode()
         }
     }
@@ -203,10 +204,9 @@ class ViewController: UIViewController {
             let z = CGFloat(planeAnchor.center.z)
             planeNode.position = SCNVector3(x, y, z)
             planeNode.eulerAngles.x = -.pi / 2
-            planeNode.isHidden = true
+            planeNode.isHidden = !self.isAdding
             
             // 5. Add plane node
-            print("Adding plane")
             node.addChildNode(planeNode)
         }
         
@@ -228,7 +228,7 @@ class ViewController: UIViewController {
             let y = CGFloat(planeAnchor.center.y)
             let z = CGFloat(planeAnchor.center.z)
             planeNode.position = SCNVector3(x, y, z)
-            print("Updating node")
+//            print("Updating node")
         }
     }
 
