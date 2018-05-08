@@ -50,18 +50,30 @@ class ViewController: UIViewController {
     }
     
     @IBAction func restart(_ sender: Any) {
+        let configuration = self.sceneView.session.configuration!
+        
         // Pause the session
         sceneView.session.pause()
-        // Remove all nodes
-        sceneView.scene.rootNode.enumerateChildNodes {(node,_) in
-            if let name = node.name {
-                print("Deleting node " + name)
+        
+        // Present confirmation dialog
+        let dialog = UIAlertController(title: "Restart?", message: "This will clear all objects added.", preferredStyle: .alert)
+        // Delete action
+        dialog.addAction(UIAlertAction(title: "OK", style: .destructive, handler: { (_) in
+            // Remove all nodes
+            self.sceneView.scene.rootNode.enumerateChildNodes {(node,_) in
+                if let name = node.name {
+                    print("Deleting node " + name)
+                }
+                node.removeFromParentNode()
             }
-            node.removeFromParentNode()
-        }
-        // Start the session again
-        let configuration = sceneView.session.configuration!
-        sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+            // Start the session again
+            self.sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+        }))
+        // Cancel action
+        dialog.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in
+            self.sceneView.session.run(configuration)
+        }))
+        present(dialog, animated: true, completion: nil)
     }
     
     @IBAction func takePhoto(_ sender: Any) {
