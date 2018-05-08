@@ -49,6 +49,21 @@ class ViewController: UIViewController {
         sceneView.addGestureRecognizer(tapGestureRecognizer)
     }
     
+    @IBAction func restart(_ sender: Any) {
+        // Pause the session
+        sceneView.session.pause()
+        // Remove all nodes
+        sceneView.scene.rootNode.enumerateChildNodes {(node,_) in
+            if let name = node.name {
+                print("Deleting node " + name)
+            }
+            node.removeFromParentNode()
+        }
+        // Start the session again
+        let configuration = sceneView.session.configuration!
+        sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+    }
+    
     @IBAction func takePhoto(_ sender: Any) {
         // Create a snapshot
         let snapshot = sceneView.snapshot()
