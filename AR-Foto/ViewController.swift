@@ -28,9 +28,10 @@ class ViewController: UIViewController {
         let scene = SCNScene()
         sceneView.scene = scene
         
-        // Long press gesture recognizer
-        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(ViewController.didLongPress(with:)))
-        sceneView.addGestureRecognizer(longPressRecognizer)
+        // Double tap gesture recognizer
+        let doubleTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(self.doubleTapHandler(with:)))
+        doubleTapRecognizer.numberOfTapsRequired = 2
+        sceneView.addGestureRecognizer(doubleTapRecognizer)
     }
     
     @IBAction func add(_ sender: Any) {
@@ -38,7 +39,7 @@ class ViewController: UIViewController {
         // Construct cube
 //        let cube = buildCube(in: sceneView.scene)
         // Add gesture recognizer
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.addObjectToSceneView(with:)))
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.singleTapHandler(with:)))
         sceneView.addGestureRecognizer(tapGestureRecognizer)
     }
     
@@ -101,49 +102,48 @@ class ViewController: UIViewController {
     
     
     // MARK: Gesture recognizers
-    @objc func addObjectToSceneView(with recognizer: UIGestureRecognizer) {
-        // 0. Return if not allowed
-        if !isAdding {
-            print("Not allowed to add")
-            return
-        }
+    @objc func doubleTapHandler(with recognizer: UIGestureRecognizer) {
+        print("Double tapped")
         
-        // 1. Retrieve hit test results
-        let tapLocation = recognizer.location(in: sceneView)
-        let hitTestResults = sceneView.hitTest(tapLocation, types: .existingPlaneUsingExtent)
-        
-        // 2. Get target position
-        guard let hitTestResult = hitTestResults.first else { return }
-        let translation = hitTestResult.worldTransform.translation
-        let x = translation.x
-        let y = translation.y
-        let z = translation.z
-        
-        // 3. Add object to the plane
-        let objNode = buildCube(in: sceneView.scene)
-        objNode.position = SCNVector3(x,y,z)
-        sceneView.scene.rootNode.addChildNode(objNode)
-        
-        // 4. Remove gesture recognizer
-        sceneView.removeGestureRecognizer(recognizer)
-        
-        // 5. Remove plane
-        if let planeNode = sceneView.scene.rootNode.childNode(withName: "plane", recursively: true) {
-            print("Removing plane node")
-            planeNode.removeFromParentNode()
-        }
-        
-        // 6. Disable adding
-        isAdding = false
-    }
-    
-    @objc func didLongPress(with recognizer: UIGestureRecognizer) {
         let tapLocation = recognizer.location(in: sceneView)
         let hitTestResults = sceneView.hitTest(tapLocation)
-        guard let node = hitTestResults.first?.node else { return }
-//        print(node.name ?? "No name")
+        if let node = hitTestResults.first?.node {
+            node.removeFromParentNode()
+        }
+    }
+
+    @objc func singleTapHandler(with recognizer: UIGestureRecognizer) {
+        print("Tapping")
         
-        node.removeFromParentNode()
+        if isAdding {
+            // 0. Disable adding
+            isAdding = false
+            
+            // 1. Retrieve hit test results
+            let tapLocation = recognizer.location(in: sceneView)
+            let hitTestResults = sceneView.hitTest(tapLocation, types: .existingPlaneUsingExtent)
+            
+            // 2. Get target position
+            guard let hitTestResult = hitTestResults.first else { return }
+            let translation = hitTestResult.worldTransform.translation
+            let x = translation.x
+            let y = translation.y
+            let z = translation.z
+            
+            // 3. Add object to the plane
+            let objNode = buildCube(in: sceneView.scene)
+            objNode.position = SCNVector3(x,y,z)
+            sceneView.scene.rootNode.addChildNode(objNode)
+            
+            // 4. Remove gesture recognizer
+            sceneView.removeGestureRecognizer(recognizer)
+            
+            // 5. Remove plane
+            if let planeNode = sceneView.scene.rootNode.childNode(withName: "plane", recursively: true) {
+                print("Removing plane node")
+                planeNode.removeFromParentNode()
+            }
+        }
     }
 }
 
