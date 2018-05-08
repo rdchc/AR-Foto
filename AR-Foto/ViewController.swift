@@ -14,6 +14,7 @@ class ViewController: UIViewController {
 
     var isAdding: Bool = false
     @IBOutlet weak var sceneView: ARSCNView!
+    @IBOutlet weak var btn_add: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,18 +36,23 @@ class ViewController: UIViewController {
     }
     
     @IBAction func add(_ sender: Any) {
-        isAdding = true
-        // Show planes
-        sceneView.scene.rootNode.enumerateChildNodes {(node,_) in
-            if node.name == "plane" {
-                node.isHidden = false
-            }
+        // Handle action according to is adding or not
+        if !isAdding {
+            isAdding = true
+            // Show planes
+            toggleVisibility(name: "plane", in: sceneView, visibility: true)
+            // Add gesture recognizer
+            let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.singleTapHandler(with:)))
+            sceneView.addGestureRecognizer(tapGestureRecognizer)
+            // Turn on button
+            setBtnColor(btn: btn_add, status: .on)
+        } else {
+            isAdding = false
+            // Hide planes
+            toggleVisibility(name: "plane", in: sceneView, visibility: false)
+            // Turn off button
+            setBtnColor(btn: btn_add, status: .off)
         }
-        // Construct cube
-//        let cube = buildCube(in: sceneView.scene)
-        // Add gesture recognizer
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.singleTapHandler(with:)))
-        sceneView.addGestureRecognizer(tapGestureRecognizer)
     }
     
     @IBAction func restart(_ sender: Any) {
@@ -117,6 +123,31 @@ class ViewController: UIViewController {
         view.automaticallyUpdatesLighting = true
     }
     
+    // Toggle object visibility
+    func toggleVisibility(name: String, in view: ARSCNView, visibility: Bool) {
+        view.scene.rootNode.enumerateChildNodes {(node,_) in
+            if node.name == name {
+                node.isHidden = !visibility
+            }
+        }
+    }
+    
+    // Set button color
+    func setBtnColor(btn: UIButton, status: BtnStatus) {
+        var color: UIColor
+        switch(status) {
+        case .off:
+            color = UIColor.green
+            break
+        case .on:
+            color = UIColor.yellow
+            break
+        default:
+            color = UIColor.gray
+        }
+        btn.backgroundColor = color
+    }
+    
     // Build a cube
     func buildCube(in scene: SCNScene) -> SCNNode {
         let box = SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0)
@@ -184,12 +215,9 @@ class ViewController: UIViewController {
             objNode.position = SCNVector3(x,y,z)
             sceneView.scene.rootNode.addChildNode(objNode)
             
-            // 4. Hide planes
-            sceneView.scene.rootNode.enumerateChildNodes {(node,_) in
-                if node.name == "plane" {
-                    node.isHidden = true
-                }
-            }
+            // 4. Hide planes, turn off add button
+            toggleVisibility(name: "plane", in: sceneView, visibility: false)
+            setBtnColor(btn: btn_add, status: .off)
         }
     }
 }
@@ -248,6 +276,11 @@ class ViewController: UIViewController {
     }
 
 // MARK: - Extensions
+enum BtnStatus {
+    case on
+    case off
+}
+
 extension float4x4 {
     var translation: float3 {
         let translation = self.columns.3

@@ -82,6 +82,7 @@
                     <toolbarItems/>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="btn_add" destination="qkF-w4-X3z" id="gKc-0V-qDG"/>
                         <outlet property="sceneView" destination="m1X-BZ-7ux" id="abf-29-odk"/>
                     </connections>
                 </viewController>
