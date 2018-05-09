@@ -11,7 +11,7 @@ import SceneKit
 import ARKit
 
 class ViewController: UIViewController {
-
+    
     let ELIGIBLE_OBJ = ["myBox"]
     var isAdding: Bool = false
     @IBOutlet weak var sceneView: ARSCNView!
@@ -38,6 +38,10 @@ class ViewController: UIViewController {
         // Pinch gesture recognizer
         let pinchRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(self.pinchHandler(with:)))
         sceneView.addGestureRecognizer(pinchRecognizer)
+        
+        // Rotation gesture recognizer
+        let rotationRecognizer = UIRotationGestureRecognizer(target: self, action: #selector(self.rotationHandler(with:)))
+        sceneView.addGestureRecognizer(rotationRecognizer)
     }
     
     @IBAction func add(_ sender: Any) {
@@ -109,7 +113,7 @@ class ViewController: UIViewController {
         // Release any cached data, images, etc that aren't in use.
     }
     
-// ############################################################################################
+    // ############################################################################################
     // MARK: - Self-defined functions
     
     // Set up a AR scene view
@@ -164,8 +168,8 @@ class ViewController: UIViewController {
         let boxNode = SCNNode(geometry: box)
         boxNode.name = "myBox"
         return boxNode
-//        boxNode.position = SCNVector3Make(0, 0, -0.5)
-//        scene.rootNode.addChildNode(boxNode)
+        //        boxNode.position = SCNVector3Make(0, 0, -0.5)
+        //        scene.rootNode.addChildNode(boxNode)
     }
     
     
@@ -196,7 +200,7 @@ class ViewController: UIViewController {
         dialog.addAction(cancelAction)
         self.present(dialog, animated: true, completion: nil)
     }
-
+    
     @objc func singleTapHandler(with recognizer: UIGestureRecognizer) {
         print("Tapping")
         
@@ -231,14 +235,14 @@ class ViewController: UIViewController {
         let location = recognizer.location(in: sceneView)
         let hitTestResults = sceneView.hitTest(location)
         guard let node = hitTestResults.first?.node else {
-//            print("Cannot find a node")
+            //            print("Cannot find a node")
             return
         }
         
         // 2. Ensure the node is eligible to scale
         guard let name = node.name else { return }
         if !ELIGIBLE_OBJ.contains(name) { return }
-//        print("Pinching node "+name)
+        //        print("Pinching node "+name)
         
         // 3. Do scale action
         let action = SCNAction.scale(by: recognizer.scale, duration: 0.1)
@@ -246,60 +250,77 @@ class ViewController: UIViewController {
         recognizer.scale = 1
         
     }
+    
+    @objc func rotationHandler(with recognizer: UIRotationGestureRecognizer) {
+        // 1. Retrieve hit test results
+        let location = recognizer.location(in: sceneView)
+        let hitTestResults = sceneView.hitTest(location)
+        guard let node = hitTestResults.first?.node else { return }
+        
+        // 2. Ensure the node is eligible to scale
+        guard let name = node.name else { return }
+        if !ELIGIBLE_OBJ.contains(name) { return }
+        
+        // 3. Do rotation
+        let rotation = CGFloat(-1*recognizer.rotation)
+        let action = SCNAction.rotateBy(x: 0, y: rotation, z: 0, duration: 0.1)
+        node.runAction(action)
+        recognizer.rotation = 0
+    }
 }
 
 // ############################################################################################
-    // MARK: - ARSCNViewDelegate
-    extension ViewController: ARSCNViewDelegate {
-        func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-            print("Adding plane")
-            
-            // 1. Get plane anchor
-            guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
-            
-            // 2. Set up plane
-            let width = CGFloat(planeAnchor.extent.x)
-            let height = CGFloat(planeAnchor.extent.z)
-            let plane = SCNPlane(width: width, height: height)
-            
-            // 3. Set plane color
-            plane.materials.first?.diffuse.contents = UIColor.transparentLightBlue
-            
-            // 4. Bind plane to node
-            let planeNode = SCNNode(geometry: plane)
-            planeNode.name = "plane"
-            let x = CGFloat(planeAnchor.center.x)
-            let y = CGFloat(planeAnchor.center.y)
-            let z = CGFloat(planeAnchor.center.z)
-            planeNode.position = SCNVector3(x, y, z)
-            planeNode.eulerAngles.x = -.pi / 2
-            planeNode.isHidden = !self.isAdding
-            
-            // 5. Add plane node
-            node.addChildNode(planeNode)
-        }
+// MARK: - ARSCNViewDelegate
+extension ViewController: ARSCNViewDelegate {
+    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        print("Adding plane")
         
-        func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-            // 1. Get plane anchors and plane
-            guard let planeAnchor = anchor as? ARPlaneAnchor,
+        // 1. Get plane anchor
+        guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
+        
+        // 2. Set up plane
+        let width = CGFloat(planeAnchor.extent.x)
+        let height = CGFloat(planeAnchor.extent.z)
+        let plane = SCNPlane(width: width, height: height)
+        
+        // 3. Set plane color
+        plane.materials.first?.diffuse.contents = UIColor.transparentLightBlue
+        
+        // 4. Bind plane to node
+        let planeNode = SCNNode(geometry: plane)
+        planeNode.name = "plane"
+        let x = CGFloat(planeAnchor.center.x)
+        let y = CGFloat(planeAnchor.center.y)
+        let z = CGFloat(planeAnchor.center.z)
+        planeNode.position = SCNVector3(x, y, z)
+        planeNode.eulerAngles.x = -.pi / 2
+        planeNode.isHidden = !self.isAdding
+        
+        // 5. Add plane node
+        node.addChildNode(planeNode)
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        // 1. Get plane anchors and plane
+        guard let planeAnchor = anchor as? ARPlaneAnchor,
             let planeNode = node.childNodes.first,
             let plane = planeNode.geometry as? SCNPlane
-                else { return }
-            
-            // 2. Update plane width and depth
-            let width = CGFloat(planeAnchor.extent.x)
-            let depth = CGFloat(planeAnchor.extent.z)
-            plane.width = width
-            plane.height = depth
-            
-            // 3. Update plane node position
-            let x = CGFloat(planeAnchor.center.x)
-            let y = CGFloat(planeAnchor.center.y)
-            let z = CGFloat(planeAnchor.center.z)
-            planeNode.position = SCNVector3(x, y, z)
-//            print("Updating node")
-        }
+            else { return }
+        
+        // 2. Update plane width and depth
+        let width = CGFloat(planeAnchor.extent.x)
+        let depth = CGFloat(planeAnchor.extent.z)
+        plane.width = width
+        plane.height = depth
+        
+        // 3. Update plane node position
+        let x = CGFloat(planeAnchor.center.x)
+        let y = CGFloat(planeAnchor.center.y)
+        let z = CGFloat(planeAnchor.center.z)
+        planeNode.position = SCNVector3(x, y, z)
+        //            print("Updating node")
     }
+}
 
 // MARK: - Extensions
 enum BtnStatus {
