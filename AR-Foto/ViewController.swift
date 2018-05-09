@@ -177,19 +177,18 @@ class ViewController: UIViewController {
     }
     
     
-    // MARK: Gesture recognizers
+    // MARK: - Gesture recognizers
+    func findHitNode(recognizer: UIGestureRecognizer, view: SCNView) -> SCNNode? {
+        let location = recognizer.location(in: view)
+        let hitTestResults = view.hitTest(location)
+        return hitTestResults.first?.node
+    }
+    
     @objc func doubleTapHandler(with recognizer: UIGestureRecognizer) {
         print("Double tapped")
         
         // Make sure the node is eligible (has a name)
-        let tapLocation = recognizer.location(in: sceneView)
-        let hitTestResults = sceneView.hitTest(tapLocation)
-        guard let node = hitTestResults.first?.node else {
-            print("Cannot find a node")
-            return
-        }
-        guard let name = node.name else { return }
-        if !ELIGIBLE_OBJ.contains(name) { return }
+        guard let node = findHitNode(recognizer: recognizer, view: sceneView), let name = node.name, ELIGIBLE_OBJ.contains(name) else { return }
         
         // Show action sheet
         let dialog = UIAlertController(title: name, message: nil, preferredStyle: .actionSheet)
@@ -235,20 +234,10 @@ class ViewController: UIViewController {
     }
     
     @objc func pinchHandler(with recognizer: UIPinchGestureRecognizer) {
-        // 1. Retrieve hit test results
-        let location = recognizer.location(in: sceneView)
-        let hitTestResults = sceneView.hitTest(location)
-        guard let node = hitTestResults.first?.node else {
-            //            print("Cannot find a node")
-            return
-        }
+        // 1. Ensure the node is eligible
+        guard let node = findHitNode(recognizer: recognizer, view: sceneView), let name = node.name, ELIGIBLE_OBJ.contains(name) else { return }
         
-        // 2. Ensure the node is eligible to scale
-        guard let name = node.name else { return }
-        if !ELIGIBLE_OBJ.contains(name) { return }
-        //        print("Pinching node "+name)
-        
-        // 3. Do scale action
+        // 2. Do scale action
         let action = SCNAction.scale(by: recognizer.scale, duration: 0.1)
         node.runAction(action)
         recognizer.scale = 1
@@ -256,16 +245,10 @@ class ViewController: UIViewController {
     }
     
     @objc func rotationHandler(with recognizer: UIRotationGestureRecognizer) {
-        // 1. Retrieve hit test results
-        let location = recognizer.location(in: sceneView)
-        let hitTestResults = sceneView.hitTest(location)
-        guard let node = hitTestResults.first?.node else { return }
+        // 1. Ensure the node is eligible
+        guard let node = findHitNode(recognizer: recognizer, view: sceneView), let name = node.name, ELIGIBLE_OBJ.contains(name) else { return }
         
-        // 2. Ensure the node is eligible
-        guard let name = node.name else { return }
-        if !ELIGIBLE_OBJ.contains(name) { return }
-        
-        // 3. Do rotation
+        // 2. Do rotation
         let rotation = CGFloat(-1*recognizer.rotation)
         let action = SCNAction.rotateBy(x: 0, y: rotation, z: 0, duration: 0.1)
         node.runAction(action)
@@ -275,16 +258,10 @@ class ViewController: UIViewController {
     @objc func panHandler(with recognizer: UIPanGestureRecognizer) {
         if recognizer.state != .changed { return }
         
-        // 1. Retrieve hit test results
-        let location = recognizer.location(in: sceneView)
-        let hitTestResults = sceneView.hitTest(location)
-        guard let node = hitTestResults.first?.node else { return }
+        // 1. Ensure the node is eligible
+        guard let node = findHitNode(recognizer: recognizer, view: sceneView), let name = node.name, ELIGIBLE_OBJ.contains(name) else { return }
         
-        // 2. Ensure the node is eligible
-        guard let name = node.name else { return }
-        if !ELIGIBLE_OBJ.contains(name) { return }
-        
-        // 3. Do pan transform
+        // 2. Do pan transform
         let translation = recognizer.translation(in: sceneView)
         let x = CGFloat(translation.x/500)
         let y = CGFloat(-1*translation.y/500)
