@@ -12,6 +12,7 @@ import ARKit
 
 class ViewController: UIViewController {
 
+    let ELIGIBLE_OBJ = ["myBox"]
     var isAdding: Bool = false
     @IBOutlet weak var sceneView: ARSCNView!
     @IBOutlet weak var btn_add: UIButton!
@@ -33,6 +34,10 @@ class ViewController: UIViewController {
         let doubleTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(self.doubleTapHandler(with:)))
         doubleTapRecognizer.numberOfTapsRequired = 2
         sceneView.addGestureRecognizer(doubleTapRecognizer)
+        
+        // Pinch gesture recognizer
+        let pinchRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(self.pinchHandler(with:)))
+        sceneView.addGestureRecognizer(pinchRecognizer)
     }
     
     @IBAction func add(_ sender: Any) {
@@ -176,7 +181,7 @@ class ViewController: UIViewController {
             return
         }
         guard let name = node.name else { return }
-        if !["myBox"].contains(name) { return }
+        if !ELIGIBLE_OBJ.contains(name) { return }
         
         // Show action sheet
         let dialog = UIAlertController(title: name, message: nil, preferredStyle: .actionSheet)
@@ -219,6 +224,27 @@ class ViewController: UIViewController {
             toggleVisibility(name: "plane", in: sceneView, visibility: false)
             setBtnColor(btn: btn_add, status: .off)
         }
+    }
+    
+    @objc func pinchHandler(with recognizer: UIPinchGestureRecognizer) {
+        // 1. Retrieve hit test results
+        let location = recognizer.location(in: sceneView)
+        let hitTestResults = sceneView.hitTest(location)
+        guard let node = hitTestResults.first?.node else {
+//            print("Cannot find a node")
+            return
+        }
+        
+        // 2. Ensure the node is eligible to scale
+        guard let name = node.name else { return }
+        if !ELIGIBLE_OBJ.contains(name) { return }
+//        print("Pinching node "+name)
+        
+        // 3. Do scale action
+        let action = SCNAction.scale(by: recognizer.scale, duration: 0.1)
+        node.runAction(action)
+        recognizer.scale = 1
+        
     }
 }
 
