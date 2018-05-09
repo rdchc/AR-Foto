@@ -42,6 +42,10 @@ class ViewController: UIViewController {
         // Rotation gesture recognizer
         let rotationRecognizer = UIRotationGestureRecognizer(target: self, action: #selector(self.rotationHandler(with:)))
         sceneView.addGestureRecognizer(rotationRecognizer)
+        
+        // Pan gesture recognizer
+        let panRecognizer = UIPanGestureRecognizer(target: self, action: #selector(self.panHandler(with:)))
+        sceneView.addGestureRecognizer(panRecognizer)
     }
     
     @IBAction func add(_ sender: Any) {
@@ -257,7 +261,7 @@ class ViewController: UIViewController {
         let hitTestResults = sceneView.hitTest(location)
         guard let node = hitTestResults.first?.node else { return }
         
-        // 2. Ensure the node is eligible to scale
+        // 2. Ensure the node is eligible
         guard let name = node.name else { return }
         if !ELIGIBLE_OBJ.contains(name) { return }
         
@@ -266,6 +270,27 @@ class ViewController: UIViewController {
         let action = SCNAction.rotateBy(x: 0, y: rotation, z: 0, duration: 0.1)
         node.runAction(action)
         recognizer.rotation = 0
+    }
+    
+    @objc func panHandler(with recognizer: UIPanGestureRecognizer) {
+        if recognizer.state != .changed { return }
+        
+        // 1. Retrieve hit test results
+        let location = recognizer.location(in: sceneView)
+        let hitTestResults = sceneView.hitTest(location)
+        guard let node = hitTestResults.first?.node else { return }
+        
+        // 2. Ensure the node is eligible
+        guard let name = node.name else { return }
+        if !ELIGIBLE_OBJ.contains(name) { return }
+        
+        // 3. Do pan transform
+        let translation = recognizer.translation(in: sceneView)
+        let x = CGFloat(translation.x/500)
+        let y = CGFloat(-1*translation.y/500)
+        let action = SCNAction.moveBy(x: x, y: 0, z: -y, duration: 0.1)
+        node.runAction(action)
+        recognizer.setTranslation(.zero, in: sceneView)
     }
 }
 
