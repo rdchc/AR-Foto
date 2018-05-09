@@ -119,7 +119,7 @@ class ViewController: UIViewController {
         view.session.run(configuration)
         
         view.delegate = self
-        view.debugOptions = [ARSCNDebugOptions.showFeaturePoints]
+//        view.debugOptions = [ARSCNDebugOptions.showFeaturePoints]
     }
     
     // Configure lighting issues
