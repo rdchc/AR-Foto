@@ -14,6 +14,7 @@ class ViewController: UIViewController {
     
     let ELIGIBLE_OBJ = ["myBox"]
     var isAdding: Bool = false
+    var selectedNode: SCNNode?
     @IBOutlet weak var sceneView: ARSCNView!
     @IBOutlet weak var btn_add: UIButton!
     
@@ -256,18 +257,35 @@ class ViewController: UIViewController {
     }
     
     @objc func panHandler(with recognizer: UIPanGestureRecognizer) {
-        if recognizer.state != .changed { return }
-        
-        // 1. Ensure the node is eligible
-        guard let node = findHitNode(recognizer: recognizer, view: sceneView), let name = node.name, ELIGIBLE_OBJ.contains(name) else { return }
-        
-        // 2. Do pan transform
-        let translation = recognizer.translation(in: sceneView)
-        let x = CGFloat(translation.x/500)
-        let y = CGFloat(-1*translation.y/500)
-        let action = SCNAction.moveBy(x: x, y: 0, z: -y, duration: 0.1)
-        node.runAction(action)
-        recognizer.setTranslation(.zero, in: sceneView)
+        switch(recognizer.state) {
+        case .possible, .cancelled, .failed:
+            break
+        case .began:
+            // Ensure the node is eligible
+            guard let node = findHitNode(recognizer: recognizer, view: sceneView), let name = node.name, ELIGIBLE_OBJ.contains(name) else { return }
+            selectedNode = node
+            break
+        case .changed:
+            // Ensure there is a selected node
+            guard let node = selectedNode else { return }
+            
+            // Calculate pan movement
+            let translation = recognizer.translation(in: sceneView)
+            let x = CGFloat(translation.x/700)
+            let y = CGFloat(-1*translation.y/700)
+            print(String(format: "Translation: %.2f, %.2f", translation.x, translation.y))
+            
+            // Do pan transform
+            let action = SCNAction.moveBy(x: x, y: 0, z: -y, duration: 0.1)
+            node.runAction(action)
+            
+            // Reset translation
+            recognizer.setTranslation(.zero, in: sceneView)
+            break
+        case .ended:
+            // Clear the selected node
+            selectedNode = nil
+        }
     }
 }
 
