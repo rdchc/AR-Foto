@@ -268,24 +268,23 @@ class ViewController: UIViewController {
         case .changed:
             // Ensure there is a selected node
             guard let node = selectedNode else { return }
+        
+            // Get current pan location
+            let location = recognizer.location(in: recognizer.view)
+            let hitTestResults = sceneView.hitTest(location, types: ARHitTestResult.ResultType.existingPlane)
+            guard let hitTestResult: ARHitTestResult = hitTestResults.first else { return }
+            let worldPos = hitTestResult.worldTransform.columns.3
             
-            // Calculate pan movement
-            let translation = recognizer.translation(in: sceneView)
-            let x = CGFloat(translation.x/700)
-            let y = CGFloat(-1*translation.y/700)
-            print(String(format: "Translation: %.2f, %.2f", translation.x, translation.y))
-            
-            // Do pan transform
-            let action = SCNAction.moveBy(x: x, y: 0, z: -y, duration: 0.1)
-            node.runAction(action)
-            
-            // Reset translation
-            recognizer.setTranslation(.zero, in: sceneView)
+            // Move the node to current location
+            let position = SCNVector3Make(worldPos.x, worldPos.y, worldPos.z)
+            node.position = position
             break
         case .ended:
             // Clear the selected node
             selectedNode = nil
+            break
         }
+       
     }
 }
 
